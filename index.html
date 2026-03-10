@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceGuard AI — Detect AI Voices Instantly</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #05060f;
+    --surface: #0c0e1a;
+    --border: rgba(255,255,255,0.07);
+    --accent: #6d28d9;
+    --cyan: #06b6d4;
+    --glow: rgba(109,40,217,0.35);
+    --text: #f0f4ff;
+    --muted: #64748b;
+    --card-bg: rgba(255,255,255,0.03);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--cyan);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.08s, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 38px; height: 38px;
+    border: 1px solid rgba(109,40,217,0.6);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, width 0.25s, height 0.25s;
+  }
+  body:hover .cursor { opacity: 1; }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.5;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 60px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,6,15,0.7);
+    backdrop-filter: blur(16px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--cyan); }
+  nav ul { list-style: none; display: flex; gap: 36px; }
+  nav ul li a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+  nav ul li a:hover { color: var(--text); }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: none;
+    transition: opacity 0.2s, transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 120px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Animated orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  .orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(109,40,217,0.22), transparent 70%);
+    top: -150px; left: -100px;
+    animation-delay: 0s;
+  }
+  .orb-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(6,182,212,0.18), transparent 70%);
+    bottom: -100px; right: -80px;
+    animation-delay: -4s;
+  }
+  .orb-3 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(109,40,217,0.12), transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -8s;
+  }
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(40px, 30px) scale(1.08); }
+  }
+
+  /* Waveform animation */
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 32px;
+    justify-content: center;
+  }
+  .bar {
+    width: 3px;
+    background: linear-gradient(to top, var(--accent), var(--cyan));
+    border-radius: 3px;
+    animation: wave 1.4s ease-in-out infinite;
+  }
+  .bar:nth-child(1)  { height: 16px; animation-delay: 0s; }
+  .bar:nth-child(2)  { height: 28px; animation-delay: 0.1s; }
+  .bar:nth-child(3)  { height: 40px; animation-delay: 0.2s; }
+  .bar:nth-child(4)  { height: 54px; animation-delay: 0.3s; }
+  .bar:nth-child(5)  { height: 36px; animation-delay: 0.4s; }
+  .bar:nth-child(6)  { height: 48px; animation-delay: 0.5s; }
+  .bar:nth-child(7)  { height: 60px; animation-delay: 0.35s; }
+  .bar:nth-child(8)  { height: 44px; animation-delay: 0.25s; }
+  .bar:nth-child(9)  { height: 32px; animation-delay: 0.15s; }
+  .bar:nth-child(10) { height: 20px; animation-delay: 0.05s; }
+  .bar:nth-child(11) { height: 38px; animation-delay: 0.45s; }
+  .bar:nth-child(12) { height: 52px; animation-delay: 0.55s; }
+  .bar:nth-child(13) { height: 40px; animation-delay: 0.6s; }
+  .bar:nth-child(14) { height: 24px; animation-delay: 0.7s; }
+  .bar:nth-child(15) { height: 14px; animation-delay: 0.8s; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+    50%       { transform: scaleY(1.1); opacity: 1; }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(109,40,217,0.4);
+    background: rgba(109,40,217,0.1);
+    font-size: 12px;
+    font-weight: 500;
+    color: #a78bfa;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    animation: pulse-dot 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(46px, 7vw, 90px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .hero h1 .line1 { display: block; color: var(--text); }
+  .hero h1 .line2 {
+    display: block;
+    background: linear-gradient(90deg, var(--accent), var(--cyan), var(--accent));
+    background-size: 200%;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+  @keyframes shimmer {
+    from { background-position: 0% 50%; }
+    to   { background-position: 200% 50%; }
+  }
+
+  .hero p {
+    max-width: 540px;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 44px;
+    font-weight: 300;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 36px;
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: none;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 40px rgba(109,40,217,0.4);
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--cyan), var(--accent));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(109,40,217,0.6); }
+  .btn-primary:hover::after { opacity: 1; }
+  .btn-primary span { position: relative; z-index: 1; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: none;
+    transition: border-color 0.2s, background 0.2s;
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    border-color: rgba(109,40,217,0.5);
+    background: rgba(109,40,217,0.08);
+  }
+
+  /* Scroll indicator */
+  .scroll-hint {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    animation: bob 2s ease-in-out infinite;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* STATS STRIP */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
+    position: relative;
+    z-index: 2;
+  }
+  .stat {
+    flex: 1;
+    max-width: 220px;
+    padding: 36px 24px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    -webkit-background-clip: text;
+    color: transparent;
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label { color: var(--muted); font-size: 13px; font-weight: 400; }
+
+  /* HOW IT WORKS */
+  .section {
+    padding: 100px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .section-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .section-sub {
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 500px;
+    line-height: 1.7;
+    margin-bottom: 64px;
+    font-weight: 300;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .step {
+    background: var(--surface);
+    padding: 44px 36px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .step:hover { background: rgba(109,40,217,0.06); }
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    color: rgba(109,40,217,0.12);
+    line-height: 1;
+    margin-bottom: 20px;
+    display: block;
+    transition: color 0.3s;
+  }
+  .step:hover .step-num { color: rgba(109,40,217,0.25); }
+  .step-icon {
+    font-size: 32px;
+    margin-bottom: 18px;
+    display: block;
+  }
+  .step h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+  .step p { color: var(--muted); font-size: 15px; line-height: 1.6; font-weight: 300; }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .feature-card {
+    padding: 36px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card-bg);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    transform-origin: left;
+  }
+  .feature-card:hover { border-color: rgba(109,40,217,0.3); transform: translateY(-4px); }
+  .feature-card:hover::before { transform: scaleX(1); }
+  .feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    background: rgba(109,40,217,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(109,40,217,0.2);
+  }
+  .feature-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.2px;
+  }
+  .feature-card p { color: var(--muted); font-size: 14px; line-height: 1.7; font-weight: 300; }
+
+  /* DEMO SECTION */
+  .demo-section {
+    padding: 60px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .demo-box {
+    max-width: 600px;
+    margin: 48px auto 0;
+    border: 2px dashed rgba(109,40,217,0.35);
+    border-radius: 20px;
+    padding: 60px;
+    background: rgba(109,40,217,0.04);
+    transition: border-color 0.3s, background 0.3s;
+    cursor: default;
+  }
+  .demo-box:hover {
+    border-color: rgba(109,40,217,0.6);
+    background: rgba(109,40,217,0.08);
+  }
+  .demo-box-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+  .demo-box p { color: var(--muted); font-size: 15px; }
+  .demo-box .demo-cta {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: none;
+    transition: opacity 0.2s;
+  }
+  .demo-box .demo-cta:hover { opacity: 0.85; }
+
+  /* CTA BANNER */
+  .cta-banner {
+    padding: 100px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-banner::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(109,40,217,0.15), transparent 60%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .cta-banner h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+    line-height: 1.05;
+    position: relative;
+  }
+  .cta-banner p { color: var(--muted); font-size: 18px; margin-bottom: 40px; font-weight: 300; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 36px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer .logo { font-size: 16px; }
+
+  /* Fade-in on scroll */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Voice<span>Guard</span></div>
+  <ul>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#demo">Demo</a></li>
+  </ul>
+  <a href="app.html" class="nav-cta">Launch App →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="waveform">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+
+  <div class="badge"><span class="badge-dot"></span> AI Voice Detection · Real-Time</div>
+
+  <h1>
+    <span class="line1">Know the voice.</span>
+    <span class="line2">Expose the fake.</span>
+  </h1>
+
+  <p>VoiceGuard AI instantly detects synthetic and AI-generated voices with neural-level accuracy — protecting you from fraud, deepfakes, and deception.</p>
+
+  <div class="hero-btns">
+    <a href="app.html" class="btn-primary">
+      <span>🛡 Start Detecting</span>
+    </a>
+    <a href="#how" class="btn-ghost">See How It Works ↓</a>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    scroll
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat reveal"><span class="stat-num">99.2%</span><span class="stat-label">Detection Accuracy</span></div>
+  <div class="stat reveal"><span class="stat-num">120ms</span><span class="stat-label">Avg. Analysis Time</span></div>
+  <div class="stat reveal"><span class="stat-num">40+</span><span class="stat-label">Audio Formats Supported</span></div>
+  <div class="stat reveal"><span class="stat-num">2.4M</span><span class="stat-label">Scans Performed</span></div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <span class="section-tag reveal">Process</span>
+  <h2 class="reveal">Three steps.<br>Complete clarity.</h2>
+  <p class="section-sub reveal">Our detection pipeline analyzes spectral patterns, vocal artifacts, and neural compression signatures in seconds.</p>
+
+  <div class="steps reveal">
+    <div class="step">
+      <span class="step-num">01</span>
+      <span class="step-icon">📁</span>
+      <h3>Upload Audio</h3>
+      <p>Drop any audio file — MP3, WAV, M4A, OGG. Or capture live voice directly in your browser.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <span class="step-icon">⚡</span>
+      <h3>Instant Analysis</h3>
+      <p>Our AI model extracts 200+ acoustic features and runs them through a trained deepfake detection network.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <span class="step-icon">🎯</span>
+      <h3>Clear Verdict</h3>
+      <p>Get a probability score — Authentic, Suspicious, or AI-Generated — with full scan history saved.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <span class="section-tag reveal">Capabilities</span>
+  <h2 class="reveal">Built for trust.<br>Engineered for speed.</h2>
+  <p class="section-sub reveal">Every feature is designed to give you fast, reliable answers when it matters most.</p>
+
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon">🧠</div>
+      <h3>Neural Detection Engine</h3>
+      <p>Trained on 500k+ real and synthetic voice samples. Identifies ElevenLabs, Murf, Resemble, and other AI voice tools by their acoustic fingerprints.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">📊</div>
+      <h3>Probability Scoring</h3>
+      <p>Never just "real or fake" — you get a confidence percentage and classification breakdown so you can make informed decisions.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">📂</div>
+      <h3>Full Scan History</h3>
+      <p>Every scan is logged to your dashboard with timestamps, scores, and file names. Search and review past analyses anytime.</p>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🔧</div>
+      <h3>Adjustable Sensitivity</h3>
+      <p>Tune the AI detection threshold to match your use case — strict for security applications, lenient for casual checks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<div class="demo-section" id="demo">
+  <span class="section-tag reveal" style="display:block">Live Demo</span>
+  <h2 class="reveal" style="font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,46px);font-weight:800;letter-spacing:-1px;margin-bottom:12px;">Try it now. No signup needed.</h2>
+  <p class="reveal" style="color:var(--muted);font-size:17px;font-weight:300;">Head into the app and upload any voice clip to see VoiceGuard in action.</p>
+
+  <div class="demo-box reveal">
+    <span class="demo-box-icon">🎙</span>
+    <p>Upload an audio file and get an instant AI detection result</p>
+    <a href="app.html" class="demo-cta">Open VoiceGuard →</a>
+  </div>
+</div>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+  <h2 class="reveal">Stop trusting voices.<br>Start verifying them.</h2>
+  <p class="reveal">Join thousands of users protecting themselves from AI voice fraud.</p>
+  <div class="hero-btns" style="justify-content:center;">
+    <a href="app.html" class="btn-primary reveal"><span>🛡 Get Started Free</span></a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">Voice<span style="color:var(--cyan)">Guard</span></div>
+  <span>© 2025 VoiceGuard AI. All rights reserved.</span>
+  <span>Made to protect trust.</span>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) *.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '20px';
+      cursor.style.height = '20px';
+      ring.style.width = '56px';
+      ring.style.height = '56px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '12px';
+      cursor.style.height = '12px';
+      ring.style.width = '38px';
+      ring.style.height = '38px';
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => obs.observe(r));
+
+  // Animate stat numbers
+  function animateNum(el, target, suffix = '') {
+    let start = 0;
+    const dur = 1800;
+    const step = (ts) => {
+      if (!start) start = ts;
+      const prog = Math.min((ts - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - prog, 3);
+      const val = parseFloat(target);
+      const isFloat = target.includes('.');
+      el.textContent = (isFloat ? (val * eased).toFixed(1) : Math.floor(val * eased)) + suffix;
+      if (prog < 1) requestAnimationFrame(step);
+      else el.textContent = target + suffix;
+    };
+    requestAnimationFrame(step);
+  }
+
+  const statObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const nums = [['99.2','%'],['120','ms'],['40','+'],['2.4','M']];
+        document.querySelectorAll('.stat-num').forEach((el, i) => {
+          animateNum(el, nums[i][0], nums[i][1]);
+        });
+        statObs.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelector('.stats') && statObs.observe(document.querySelector('.stats'));
+</script>
+</body>
+</html>

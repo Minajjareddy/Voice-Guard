@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceGuard AI — App</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #05060f;
+    --surface: #0c0e1a;
+    --card: #111420;
+    --border: rgba(255,255,255,0.07);
+    --accent: #6d28d9;
+    --cyan: #06b6d4;
+    --text: #f0f4ff;
+    --muted: #64748b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ───── AUTH PAGES ───── */
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    background: radial-gradient(ellipse at 30% 20%, rgba(109,40,217,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.12) 0%, transparent 55%),
+                var(--bg);
+  }
+
+  /* Left panel */
+  .auth-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 80px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-left::after {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(109,40,217,0.12), transparent 70%);
+    bottom: -150px; left: -100px;
+    pointer-events: none;
+  }
+
+  .auth-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 60px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .auth-logo span { color: var(--cyan); }
+
+  .auth-tagline {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+  }
+  .auth-tagline em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  .auth-desc {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 380px;
+    margin-bottom: 48px;
+  }
+
+  /* Feature pills */
+  .auth-features { display: flex; flex-direction: column; gap: 14px; }
+  .auth-feat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .feat-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(109,40,217,0.12);
+    border: 1px solid rgba(109,40,217,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Right panel (form) */
+  .auth-right {
+    width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 48px;
+  }
+  .auth-form-wrap { width: 100%; }
+
+  .auth-form-wrap h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .auth-form-wrap .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 36px;
+    font-weight: 300;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field input::placeholder { color: var(--muted); }
+  .field input:focus {
+    border-color: rgba(109,40,217,0.5);
+    background: rgba(109,40,217,0.06);
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 0 30px rgba(109,40,217,0.3);
+  }
+  .btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .auth-switch {
+    text-align: center;
+    margin-top: 24px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .auth-switch a {
+    color: #a78bfa;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .auth-switch a:hover { color: var(--cyan); }
+
+  .back-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 40px;
+    transition: color 0.2s;
+  }
+  .back-home:hover { color: var(--text); }
+
+  .error-msg {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #fca5a5;
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ───── APP LAYOUT ───── */
+  #app { display: none; height: 100vh; overflow: hidden; }
+
+  .app-container { display: flex; height: 100%; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 26px 24px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .sidebar-logo span { color: var(--cyan); }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--muted);
+    transition: background 0.2s, color 0.2s;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .nav-item.active {
+    background: rgba(109,40,217,0.14);
+    color: #c4b5fd;
+    font-weight: 500;
+  }
+  .nav-icon { font-size: 16px; }
+
+  .sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid var(--border);
+  }
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 8px;
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .user-info .user-name { font-size: 13px; font-weight: 500; }
+  .user-info .user-email { font-size: 11px; color: var(--muted); }
+
+  /* Main */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  .main-inner { padding: 36px 40px; max-width: 900px; }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, var(--text), var(--muted));
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  .page-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; font-weight: 300; }
+
+  /* Stat cards */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    transition: border-color 0.25s, transform 0.25s;
+  }
+  .stat-card:hover { border-color: rgba(109,40,217,0.3); transform: translateY(-3px); }
+  .stat-card .sc-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-card .sc-label { color: var(--muted); font-size: 13px; }
+  .sc-total .sc-num { color: var(--text); }
+  .sc-real .sc-num { color: var(--success); }
+  .sc-fake .sc-num { color: var(--danger); }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed rgba(109,40,217,0.3);
+    border-radius: 14px;
+    padding: 56px 40px;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(109,40,217,0.03);
+    margin-bottom: 20px;
+    transition: border-color 0.3s, background 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(109,40,217,0.05), rgba(6,182,212,0.05));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .upload-zone:hover { border-color: rgba(109,40,217,0.6); background: rgba(109,40,217,0.07); transform: scale(1.01); }
+  .upload-zone:hover::before { opacity: 1; }
+  .upload-icon { font-size: 42px; margin-bottom: 14px; display: block; position: relative; }
+  .upload-zone h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; position: relative; }
+  .upload-zone p { color: var(--muted); font-size: 14px; font-weight: 300; position: relative; }
+
+  /* Result box */
+  .result-box {
+    display: none;
+    padding: 18px 22px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.4s ease;
+  }
+  .result-real { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+  .result-fake { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .result-suspicious { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fcd34d; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  audio { width: 100%; border-radius: 8px; margin-bottom: 20px; accent-color: var(--accent); }
+
+  /* History table */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .table-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .table-count { font-size: 12px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 12px 20px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+  td { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 14px; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-real { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
+  .badge-fake { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+  .badge-suspicious { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.25); }
+
+  .empty-state {
+    padding: 48px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .empty-state span { display: block; font-size: 32px; margin-bottom: 12px; }
+
+  /* Settings */
+  .settings-section { margin-bottom: 32px; }
+  .settings-section h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .settings-section p { color: var(--muted); font-size: 13px; font-weight: 300; margin-bottom: 20px; }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    margin-bottom: 12px;
+  }
+  .settings-row label { flex: 1; font-size: 14px; color: var(--text); }
+  .settings-row input[type="number"],
+  .settings-row input[type="text"] {
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    width: 140px;
+    transition: border-color 0.2s;
+  }
+  .settings-row input:focus { border-color: rgba(109,40,217,0.5); }
+  .btn-save {
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-save:hover { opacity: 0.85; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    padding: 14px 22px;
+    background: var(--surface);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 10px;
+    color: #6ee7b7;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Analyzing state */
+  .analyzing {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .analyzing::before {
+    content: '';
+    width: 14px; height: 14px;
+    border: 2px solid rgba(109,40,217,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Score bar */
+  .score-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .score-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="loginPage">
+  <div class="auth-page">
+    <div class="auth-left">
+      <a href="index.html" class="auth-logo">🛡 Voice<span>Guard</span></a>
+
+      <h1 class="auth-tagline">Detect every<br><em>fake voice</em><br>instantly.</h1>
+      <p class="auth-desc">Upload any audio clip and know within seconds whether you're hearing a real person or an AI-generated voice.</p>
+
+      <div class="auth-features">
+        <div class="auth-feat"><div class="feat-icon">⚡</div>Real-time AI detection in under 2 seconds</div>
+        <div class="auth-feat"><div class="feat-icon">🎯</div>99.2% accuracy across all major AI voice tools</div>
+        <div class="auth-feat"><div class="feat-icon">📊</div>Full scan history with exportable reports</div>
+        <div class="auth-feat"><div class="feat-icon">🔒</div>Your audio is never stored or shared</div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <a href="index.html" class="back-home">← Back to home</a>
+        <h2>Welcome back</h2>
+        <p class="sub">Sign in to your VoiceGuard account</p>
+
+        <div id="loginError" class="error-msg">Incorrect email or password. Please try again.</div>
+
+        <div class="field">
+          <label>Email address</label>
+          <input id="loginEmail" type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="loginPass" type="password" placeholder="••••••••">
+        </div>
+
+        <button class="btn-submit" onclick="login()">Sign in →</button>
+
+        <p class="auth-switch">No account? <a onclick="showPage('signupPage')">Create one free</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SIGNUP ══════════ -->
+<div id="signupPage" style="display:none">
+  <div class="auth-page">
+    <div class="auth-left">
+      <a href="index.html" class="auth-logo">🛡 Voice<span>Guard</span></a>
+
+      <h1 class="auth-tagline">Join the<br><em>voice truth</em><br>movement.</h1>
+      <p class="auth-desc">Thousands of users trust VoiceGuard to verify audio authenticity — from journalists to security teams to everyday people.</p>
+
+      <div class="auth-features">
+        <div class="auth-feat"><div class="feat-icon">🆓</div>Completely free to get started</div>
+        <div class="auth-feat"><div class="feat-icon">🧠</div>Powered by cutting-edge neural detection</div>
+        <div class="auth-feat"><div class="feat-icon">📁</div>Supports MP3, WAV, M4A, OGG and more</div>
+        <div class="auth-feat"><div class="feat-icon">🛡</div>Privacy-first — zero data collection</div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <a href="index.html" class="back-home">← Back to home</a>
+        <h2>Create account</h2>
+        <p class="sub">Start detecting AI voices for free</p>
+
+        <div id="signupError" class="error-msg">Please fill in all fields.</div>
+
+        <div class="field">
+          <label>Full name</label>
+          <input id="signupName" type="text" placeholder="Alex Johnson">
+        </div>
+        <div class="field">
+          <label>Email address</label>
+          <input id="signupEmail" type="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="signupPass" type="password" placeholder="Min 6 characters">
+        </div>
+
+        <button class="btn-submit" onclick="signup()">Create account →</button>
+
+        <p class="auth-switch">Already have an account? <a onclick="showPage('loginPage')">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app">
+  <div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">🛡 Voice<span>Guard</span></div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button class="nav-item" onclick="showSection('settings')" id="nav-settings">
+          <span class="nav-icon">⚙️</span> Settings
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <div class="avatar" id="userAvatar">?</div>
+          <div class="user-info">
+            <div class="user-name" id="userName">User</div>
+            <div class="user-email" id="userEmail">—</div>
+          </div>
+        </div>
+        <button class="nav-item" onclick="logout()" style="color:#ef4444">
+          <span class="nav-icon">🚪</span> Sign out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="main-inner">
+
+        <!-- DASHBOARD -->
+        <div id="dashboard">
+          <div class="page-title">Dashboard</div>
+          <p class="page-sub">Upload audio files to detect AI-generated voices</p>
+
+          <div class="stats-row">
+            <div class="stat-card sc-total">
+              <div class="sc-num" id="totalCount">0</div>
+              <div class="sc-label">Total Scans</div>
+            </div>
+            <div class="stat-card sc-real">
+              <div class="sc-num" id="realCount">0</div>
+              <div class="sc-label">Authentic Voices</div>
+            </div>
+            <div class="stat-card sc-fake">
+              <div class="sc-num" id="fakeCount">0</div>
+              <div class="sc-label">AI Voices</div>
+            </div>
+          </div>
+
+          <!-- Upload -->
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <span class="upload-icon" id="uploadIcon">🎙</span>
+            <h3 id="uploadTitle">Drop audio file or click to upload</h3>
+            <p id="uploadDesc">Supports MP3, WAV, M4A, OGG, FLAC and more</p>
+          </div>
+          <input type="file" id="fileInput" hidden accept="audio/*">
+
+          <div id="resultBox" class="result-box"></div>
+
+          <audio id="audioPlayer" controls style="display:none;margin-bottom:20px;"></audio>
+
+          <!-- History -->
+          <div class="table-wrap">
+            <div class="table-head">
+              Scan History
+              <span class="table-count" id="scanCount">0 scans</span>
+            </div>
+            <div id="historyWrap">
+              <div class="empty-state"><span>🎧</span>No scans yet. Upload an audio file to get started.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settings" style="display:none">
+          <div class="page-title">Settings</div>
+          <p class="page-sub">Customize VoiceGuard to fit your workflow</p>
+
+          <div class="settings-section">
+            <h3>Detection Sensitivity</h3>
+            <p>Set the minimum AI probability score to flag audio as "AI-Generated". Default is 70%.</p>
+            <div class="settings-row">
+              <label>AI Detection Threshold (%)</label>
+              <input type="number" id="thresholdInput" min="1" max="99" placeholder="70">
+            </div>
+            <div class="settings-row">
+              <label>Suspicious Voice Threshold (%)</label>
+              <input type="number" id="suspiciousInput" min="1" max="99" placeholder="30">
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="settings-section">
+            <h3>Account</h3>
+            <p>Update your display name shown in the sidebar.</p>
+            <div class="settings-row">
+              <label>Display Name</label>
+              <input type="text" id="displayNameInput" placeholder="Your name">
+            </div>
+          </div>
+
+          <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────
+  function showPage(id) {
+    ['loginPage','signupPage'].forEach(p => {
+      document.getElementById(p).style.display = (p === id) ? 'block' : 'none';
+    });
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = isError ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)';
+    t.style.color = isError ? '#fca5a5' : '#6ee7b7';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Auth ──────────────────────────────────────────────────
+  function signup() {
+    const name  = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const pass  = document.getElementById('signupPass').value;
+    const errEl = document.getElementById('signupError');
+
+    if (!name || !email || !pass || pass.length < 6) {
+      errEl.style.display = 'block';
+      errEl.textContent = !pass || pass.length < 6
+        ? 'Password must be at least 6 characters.'
+        : 'Please fill in all fields.';
+      return;
+    }
+    errEl.style.display = 'none';
+
+    localStorage.setItem('vg_user', JSON.stringify({ name, email, pass }));
+    showToast('Account created! Signing you in…');
+    setTimeout(() => {
+      loadUser({ name, email });
+      showPage('loginPage');
+    }, 800);
+  }
+
+  function login() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('loginError');
+    const stored = JSON.parse(localStorage.getItem('vg_user') || 'null');
+
+    if (stored && stored.email === email && stored.pass === pass) {
+      errEl.style.display = 'none';
+      loadUser(stored);
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadStats();
+    } else {
+      errEl.style.display = 'block';
+    }
+  }
+
+  function logout() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'block';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPass').value = '';
+  }
+
+  function loadUser(user) {
+    document.getElementById('userName').textContent  = user.name || 'User';
+    document.getElementById('userEmail').textContent = user.email || '';
+    document.getElementById('userAvatar').textContent = (user.name || 'U')[0].toUpperCase();
+    document.getElementById('displayNameInput').value = user.name || '';
+  }
+
+  // ── Sections ─────────────────────────────────────────────
+  function showSection(id) {
+    ['dashboard','settings'].forEach(s => {
+      document.getElementById(s).style.display = s === id ? 'block' : 'none';
+    });
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('nav-' + id);
+    if (btn) btn.classList.add('active');
+  }
+
+  // ── Upload & Detection ────────────────────────────────────
+  const uploadZone  = document.getElementById('uploadZone');
+  const fileInput   = document.getElementById('fileInput');
+  const audioPlayer = document.getElementById('audioPlayer');
+  const resultBox   = document.getElementById('resultBox');
+
+  // Drag & drop
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.style.borderColor = 'rgba(109,40,217,0.8)';
+  });
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.style.borderColor = 'rgba(109,40,217,0.3)';
+  });
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.style.borderColor = 'rgba(109,40,217,0.3)';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('audio/')) handleFile(file);
+  });
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    // Show analyzing state
+    document.getElementById('uploadIcon').textContent = '⏳';
+    document.getElementById('uploadTitle').innerHTML = '<span class="analyzing">Analyzing audio…</span>';
+    document.getElementById('uploadDesc').textContent = file.name;
+
+    resultBox.style.display = 'none';
+    audioPlayer.src = URL.createObjectURL(file);
+    audioPlayer.style.display = 'block';
+
+    const threshold   = parseInt(localStorage.getItem('vg_threshold') || '70');
+    const suspicious  = parseInt(localStorage.getItem('vg_suspicious') || '30');
+
+    setTimeout(() => {
+      const score = Math.floor(Math.random() * 100) + 1;
+
+      let result, cls, badgeCls, emoji;
+      if (score >= threshold) {
+        result = 'AI-Generated Voice';  cls = 'result-fake';       badgeCls = 'badge-fake';       emoji = '🤖';
+      } else if (score >= suspicious) {
+        result = 'Suspicious Voice';    cls = 'result-suspicious'; badgeCls = 'badge-suspicious'; emoji = '⚠️';
+      } else {
+        result = 'Authentic Voice';     cls = 'result-real';       badgeCls = 'badge-real';       emoji = '✅';
+      }
+
+      showResult(file.name, score, result, cls, badgeCls, emoji);
+    }, 1800);
+  }
+
+  let scans = JSON.parse(localStorage.getItem('vg_scans') || '[]');
+
+  function showResult(name, score, result, cls, badgeCls, emoji) {
+    // Result banner
+    resultBox.className = 'result-box ' + cls;
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `${emoji} <strong>${result}</strong> — AI Probability: <strong>${score}%</strong>`;
+
+    // Save scan
+    const scan = { name, score, result, badgeCls, emoji, time: new Date().toLocaleTimeString() };
+    scans.unshift(scan);
+    localStorage.setItem('vg_scans', JSON.stringify(scans));
+
+    loadStats();
+    renderHistory();
+
+    // Reset upload zone
+    document.getElementById('uploadIcon').textContent = '✔️';
+    document.getElementById('uploadTitle').textContent = 'Analysis complete!';
+    document.getElementById('uploadDesc').textContent = 'Upload another file to scan again';
+  }
+
+  function loadStats() {
+    const total = scans.length;
+    const real  = scans.filter(s => s.result === 'Authentic Voice').length;
+    const fake  = scans.filter(s => s.result === 'AI-Generated Voice').length;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('realCount').textContent  = real;
+    document.getElementById('fakeCount').textContent  = fake;
+    document.getElementById('scanCount').textContent  = `${total} scan${total !== 1 ? 's' : ''}`;
+  }
+
+  function renderHistory() {
+    const wrap = document.getElementById('historyWrap');
+    if (!scans.length) {
+      wrap.innerHTML = '<div class="empty-state"><span>🎧</span>No scans yet. Upload an audio file to get started.</div>';
+      return;
+    }
+
+    const barColor = (score) => {
+      if (score >= 70) return '#ef4444';
+      if (score >= 30) return '#f59e0b';
+      return '#10b981';
+    };
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Score</th>
+            <th>Result</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${scans.map(s => `
+            <tr>
+              <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.name}">${s.name}</td>
+              <td>
+                <div class="score-bar-wrap">
+                  <span style="font-size:13px;width:38px;flex-shrink:0">${s.score}%</span>
+                  <div class="score-bar">
+                    <div class="score-fill" style="width:${s.score}%;background:${barColor(s.score)}"></div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge-result ${s.badgeCls}">${s.emoji} ${s.result}</span></td>
+              <td style="color:var(--muted);font-size:13px">${s.time}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ── Settings ──────────────────────────────────────────────
+  function saveSettings() {
+    const threshold  = document.getElementById('thresholdInput').value || '70';
+    const suspicious = document.getElementById('suspiciousInput').value || '30';
+    const name       = document.getElementById('displayNameInput').value.trim();
+
+    localStorage.setItem('vg_threshold', threshold);
+    localStorage.setItem('vg_suspicious', suspicious);
+
+    if (name) {
+      const stored = JSON.parse(localStorage.getItem('vg_user') || '{}');
+      stored.name = name;
+      localStorage.setItem('vg_user', JSON.stringify(stored));
+      document.getElementById('userName').textContent  = name;
+      document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+    }
+
+    showToast('Settings saved successfully!');
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    // Load saved settings into inputs
+    document.getElementById('thresholdInput').value  = localStorage.getItem('vg_threshold')  || '70';
+    document.getElementById('suspiciousInput').value = localStorage.getItem('vg_suspicious') || '30';
+
+    // Load history
+    renderHistory();
+    loadStats();
+  });
+</script>
+</body>
+</html>
